@@ -1,0 +1,62 @@
+version: '2'
+
+services:
+  filebeat:
+    user: root
+    hostname: yp2
+    network_mode: host
+    restart: always
+    build:
+      context: filebeat/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - ./filebeat/config/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/log:/host-log:ro
+    command: >
+      filebeat -e -strict.perms=false
+      -E output.elasticsearch.hosts=["10.7.6.5:9200"]
+      -E output.elasticsearch.username=elastic
+      -E output.elasticsearch.password=elastic-password
+
+  packetbeat:
+    user: packetbeat
+    hostname: yp2
+    network_mode: host
+    restart: always
+    cap_add:
+        - NET_RAW
+        - NET_ADMIN
+    build:
+      context: packetbeat/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - ./packetbeat/config/packetbeat.docker.yml:/usr/share/packetbeat/packetbeat.yml:ro
+    command: >
+      -e -strict.perms=false
+      -E output.elasticsearch.hosts=["10.7.6.5:9200"]
+      -E output.elasticsearch.username=elastic
+      -E output.elasticsearch.password=elastic-password
+
+  metricbeat:
+    user: root
+    hostname: yp2
+    network_mode: host
+    restart: always
+    build:
+      context: metricbeat/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - ./metricbeat/config/metricbeat.docker.yml:/usr/share/metricbeat/metricbeat.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /proc:/hostfs/proc:ro
+      - /:/hostfs:ro
+    command: >
+      --strict.perms=false -e
+      -E output.elasticsearch.hosts=["10.7.6.5:9200"]
+      -E output.elasticsearch.username=elastic
+      -E output.elasticsearch.password=elastic-password
+

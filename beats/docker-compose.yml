@@ -15,7 +15,7 @@ services:
       - /var/log:/host-log:ro
     command: >
       filebeat -e -strict.perms=false
-      -E output.elasticsearch.hosts=["10.7.6.5:9200"]
+      -E output.elasticsearch.hosts=["elasticsearch:9200"]
       -E output.elasticsearch.username=elastic
       -E output.elasticsearch.password=elastic-password
 
@@ -35,7 +35,7 @@ services:
       - ./packetbeat/config/packetbeat.docker.yml:/usr/share/packetbeat/packetbeat.yml:ro
     command: >
       -e -strict.perms=false
-      -E output.elasticsearch.hosts=["10.7.6.5:9200"]
+      -E output.elasticsearch.hosts=["elasticsearch:9200"]
       -E output.elasticsearch.username=elastic
       -E output.elasticsearch.password=elastic-password
 
@@ -56,7 +56,27 @@ services:
       - /:/hostfs:ro
     command: >
       --strict.perms=false -e
-      -E output.elasticsearch.hosts=["10.7.6.5:9200"]
+      -E output.elasticsearch.hosts=["elasticsearch:9200"]
       -E output.elasticsearch.username=elastic
       -E output.elasticsearch.password=elastic-password
 
+  auditbeat:
+    user: root
+    hostname: yp2
+    network_mode: host
+    restart: always
+    pid: host
+    cap_add:
+        - AUDIT_CONTROL
+        - AUDIT_READ
+    build:
+      context: auditbeat/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - ./auditbeat/config/auditbeat.docker.yml:/usr/share/auditbeat/auditbeat.yml:ro
+    command: >
+      --strict.perms=false -e
+      -E output.elasticsearch.hosts=["elasticsearch:9200"]
+      -E output.elasticsearch.username=elastic
+      -E output.elasticsearch.password=elastic-password

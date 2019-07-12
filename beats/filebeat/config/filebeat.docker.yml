@@ -1,10 +1,69 @@
-filebeat.inputs:
-- type: log
-  enabled: true
-  paths:
-    - /host-log/*.log
-    - /host-log/syslog
-    - /host-log/messages
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+
+#  filebeat.inputs:
+#  - type: log
+  #  enabled: true
+  #  paths:
+    #  - /host-log/*.log
+    #  - /host-log/syslog
+    #  - /host-log/messages
+
+filebeat.modules:
+  - module: system
+    syslog:
+      enabled: true
+      var.paths: ["/host-log/syslog*"]
+    auth:
+      enabled: true
+      var.paths: ["/host-log/auth.log*"]
+
+  - module: auditd
+    log:
+      enabled: true
+      var.paths: ["/host-log/audit/audit.log*"]
+
+  #  - module: iptables
+    #  log:
+      #  enabled: true
+      #  var.paths: ["/var/log/iptables.log"]
+      #  var.input: "file"
+
+  - module: elasticsearch
+    server:
+      enabled: true
+      var.paths:
+        - /host-log/elasticsearch/*.log          # Plain text logs
+        - /host-log/elasticsearch/*_server.json  # JSON logs
+    gc:
+      var.paths:
+        - /host-log/elasticsearch/gc.log.[0-9]*
+        - /host-log/elasticsearch/gc.log
+
+    audit:
+      var.paths:
+        - /host-log/elasticsearch/*_access.log  # Plain text logs
+        - /host-log/elasticsearch/*_audit.json  # JSON logs
+
+    slowlog:
+      var.paths:
+        - /host-log/elasticsearch/*_index_search_slowlog.log     # Plain text logs
+        - /host-log/elasticsearch/*_index_indexing_slowlog.log   # Plain text logs
+        - /host-log/elasticsearch/*_index_search_slowlog.json    # JSON logs
+        - /host-log/elasticsearch/*_index_indexing_slowlog.json  # JSON logs
+
+    deprecation:
+       var.paths:
+         - /host-log/elasticsearch/*_deprecation.log   # Plain text logs
+         - /host-log/elasticsearch/*_deprecation.json  # JSON logs
+
 
 output.elasticsearch:
   enabled: true

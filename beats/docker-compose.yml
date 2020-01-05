@@ -12,6 +12,7 @@ services:
         ELK_VERSION: $ELK_VERSION
     volumes:
       - ./filebeat/config/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/log:/host-log:ro
     command: >
       filebeat -e -strict.perms=false
@@ -64,6 +65,7 @@ services:
     user: root
     hostname: yp2
     network_mode: host
+    privileged: true
     restart: always
     pid: host
     cap_add:
